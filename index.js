@@ -46,7 +46,7 @@ app.post('/webhook', async (req, res) => {
                     `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
                     {
                         messaging_product: 'whatsapp',
-                        from,
+                        to: from,
                         type: 'text',
                         text: {
                             body: `👋 BIENVENIDO SELECCIONE ALGUNA DE LAS OPCIONES:\n1️⃣ CONTACTAR ASESOR\n2️⃣ SABER HORARIOS\n3️⃣ SABER UBICACIONES`
@@ -66,6 +66,66 @@ app.post('/webhook', async (req, res) => {
         }
     }
     res.sendStatus(200);
+});
+
+app.post('/send-buttons', async (req, res) => {
+    const { to } = req.body;
+
+    try {
+        const response = await axios.post(
+            `https://graph.facebook.com/v18.0/${PHONE_ID}/messages`,
+            {
+                messaging_product: 'whatsapp',
+                to,
+                type: 'interactive',
+                interactive: {
+                    type: 'button',
+                    body: {
+                        text: "👋 Hola, ¿qué querés hacer?"
+                    },
+                    action: {
+                        buttons: [
+                            {
+                                type: 'reply',
+                                reply: {
+                                    id: 'contactar_asesor',
+                                    title: '📞 Contactar asesor'
+                                }
+                            },
+                            {
+                                type: 'reply',
+                                reply: {
+                                    id: 'ver_horarios',
+                                    title: '🕓 Ver horarios'
+                                }
+                            },
+                            {
+                                type: 'reply',
+                                reply: {
+                                    id: 'ver_ubicacion',
+                                    title: '📍 Ver ubicaciones'
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+
+        console.log("✅ Botones enviados:", response.data);
+        res.status(200).json({ status: 'ok', response: response.data });
+
+    } catch (error) {
+        console.error("❌ Error al enviar botones:");
+        console.error(error.response?.data || error.message);
+        res.status(500).json({ error: error.response?.data || error.message });
+    }
 });
 
 app.listen(3000, () => {
