@@ -23,7 +23,6 @@ app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
         console.log('Webhook verificado');
         res.status(200).send(`${challenge}`);
@@ -36,25 +35,18 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', async (req, res) => {
     const entry = req.body.entry?.[0];
     const message = entry?.changes?.[0]?.value?.messages?.[0];
-
     if (message && message.text) {
         const from = message.from;
         const msgBody = message.text.body.toLowerCase();
-
         console.log("📨 Mensaje recibido de:", from);
         console.log("📝 Contenido:", msgBody);
-
         if (msgBody.includes('hola')) {
             try {
-                const to = formatPhoneNumber(from);
-
-                console.log("📞 Enviando mensaje a:", to);
-
                 const response = await axios.post(
                     `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
                     {
                         messaging_product: 'whatsapp',
-                        to,
+                        from,
                         type: 'text',
                         text: {
                             body: `👋 BIENVENIDO SELECCIONE ALGUNA DE LAS OPCIONES:\n1️⃣ CONTACTAR ASESOR\n2️⃣ SABER HORARIOS\n3️⃣ SABER UBICACIONES`
@@ -67,15 +59,12 @@ app.post('/webhook', async (req, res) => {
                         }
                     }
                 );
-
-                console.log("✅ Mensaje enviado:", response.data);
             } catch (error) {
                 console.error("❌ Error al enviar mensaje:");
                 console.error(error.response?.data || error.message);
             }
         }
     }
-
     res.sendStatus(200);
 });
 
