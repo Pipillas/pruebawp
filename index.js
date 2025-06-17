@@ -18,7 +18,6 @@ function formatPhoneNumber(number) {
     return number;
 }
 
-
 // RUTA PARA VERIFICAR WEBHOOK
 app.get('/webhook', (req, res) => {
     const mode = req.query['hub.mode'];
@@ -35,8 +34,6 @@ app.get('/webhook', (req, res) => {
 
 // RUTA PARA ESCUCHAR MENSAJES
 app.post('/webhook', async (req, res) => {
-    console.log("✅ Recibido webhook:", JSON.stringify(req.body, null, 2));
-
     const entry = req.body.entry?.[0];
     const message = entry?.changes?.[0]?.value?.messages?.[0];
 
@@ -50,6 +47,8 @@ app.post('/webhook', async (req, res) => {
         if (msgBody.includes('hola')) {
             try {
                 const to = formatPhoneNumber(from);
+
+                console.log("📞 Enviando mensaje a:", to);
 
                 const response = await axios.post(
                     `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
